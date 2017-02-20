@@ -1,0 +1,8 @@
+---
+applications:
+- services:
+  - myMicroservicesSQL
+name: MicroservicesOrdersAPI
+path: ./target/JavaOrdersAPI-0.0.1-SNAPSHOT.war 
+instances: 1
+memory: 512M
