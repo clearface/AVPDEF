@@ -74,6 +74,15 @@ public class OrdersService {
 		System.out.println("New order: " + order.toString());
 		try {
 			utx.begin();
+			System.out.println("Perform CPU intensive operation ");
+			long n = 123456;
+			double fact = 1;
+			long i = 0;
+			for (i = 1 ; i <= n ; i++){
+				fact = Math.atan(Math.sqrt(Math.pow(i, Math.cbrt(i))));
+			}
+			System.out.println(fact);
+			
 			em.persist(order);
 			utx.commit();
 
