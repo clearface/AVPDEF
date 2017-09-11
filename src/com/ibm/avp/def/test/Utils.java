@@ -1,13 +1,5 @@
 package com.ibm.avp.def.test;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 /* version history
 	v1: First numbered version 09/11/2017.
@@ -41,6 +33,10 @@ public class Utils
 	
 	public static void logExit (String inClassMethod) {
 		logString (inClassMethod, "exit", 1);
+	}
+	
+	public static void logException (String inClassMethod, Exception inException, String inComment) {
+		logString (inClassMethod, inComment + " : " + inException.toString(), 0);
 	}
 	
 	public static int getCurrentLogLevel() { return currentLogLevel; }
@@ -98,9 +94,33 @@ public class Utils
 		}
 	}
 	
+	public static int getIntProperty (String inKey) {
+		if (inKey == null)
+			return -1;
+		else
+		if (myProperties.containsKey(inKey)) {
+			int returnint = 0;
+			String intstring = myProperties.getProperty(inKey);
+			try { returnint = Integer.parseInt(intstring); }
+			catch (NumberFormatException ex) {
+				logException(logClassname + ".getIntProperty()", ex, 
+					"NumberFormatException on <" + intstring + "> for key <" + inKey + ">");
+				returnint = -3;
+			}
+			return returnint;
+		}
+		else
+			return -2;
+	}
+	
 	public static void readProperties() 
 	{
 		logString (logClassname + ".readProperties()", "version = " + Integer.toString(myVersion), 0);
+		
+		myProperties.put(KEY_LOGLEVEL, 0);
+		myProperties.put(MockEvents.KEY_NUMPROCS, "9");
+		myProperties.put(MockEvents.KEY_MINEVENTS, "2");
+		myProperties.put(MockEvents.KEY_MAXEVENTS, "12");
 		
 		setCurrentLogLevel(Integer.parseInt(myProperties.getProperty(KEY_LOGLEVEL)));
 		if (currentLogLevel > 1) 
