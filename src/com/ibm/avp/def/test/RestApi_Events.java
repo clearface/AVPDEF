@@ -19,8 +19,6 @@ import javax.ws.rs.QueryParam;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 
-import commonj.sdo.DataObject;
-
 @Path(value="/events")
 public class RestApi_Events
 {
@@ -41,7 +39,7 @@ public class RestApi_Events
 	public static final String KEY_EVENTTIME = RestApi_EventsManager.KEY_EVENTTIME;
 	public static final String KEY_EVENTTYPE = RestApi_EventsManager.KEY_EVENTTYPE;
 	
-	public RestEventsImpl() { 
+	public RestApi_Events() { 
 		Utils.logEnter (myClassname + " : constructor");
 	}
 	
@@ -51,7 +49,7 @@ public class RestApi_Events
 		Utils.logEnter (myClassname + ".getTopLevelData()");
 		
 		RestApi_EventsManager eventsmgr = RestApi_EventsManager.getEventsManager();
-		Map<String,SortedSet<DEFEvent>> allevents = eventsmgr.getAllDefEventsOfTypeAsSDO (DEFEventFactory.TYPE_SLIM);
+		Map<String,SortedSet<DEFEvent>> allevents = eventsmgr.getAllDefEvents();
 		
 		JSONObject jsonmap = new JSONObject();
 		if (allevents == null)
@@ -101,23 +99,29 @@ public class RestApi_Events
   @Path(value="{id}")
   public String getEventsDataForId (@PathParam("id") String inCorrelationId) {
     	Utils.logEnter (myClassname + ".getEventsDataForId(" + inCorrelationId + ")");
-    	String dflttype = Utils.getProperty(KEY_EVENTSDEFAULTTYPE);
-    	return getEventsDataOfTypeForId (dflttype, inCorrelationId);
-  }
-    
-  protected String getEventsDataOfTypeForId (String inDataType, String inCorrelationId) {
-    Utils.logEnter (myClassname + ".getEventsDataOfTypeForId(" + inDataType + ", " + inCorrelationId + ")");
-		
-		RestApi_EventsManager eventsmgr = RestApi_EventsManager.getEventsManager();
-		JSONArray eventslist = eventsmgr.getDefEventsOfTypeForCorrelationIdAsJSON (inDataType, inCorrelationId);
 
+		RestApi_EventsManager eventsmgr = RestApi_EventsManager.getEventsManager();
+		SortedSet<DEFEvent> defevents = eventsmgr.getDefEventsForCorrelationId (inCorrelationId);
+		
 		JSONObject returnmap = new JSONObject();
 		returnmap.put(KEY_CORRELATIONID, inCorrelationId);
-		returnmap.put(KEY_NUMEVENTS, (eventslist == null ? "null" : Integer.toString(eventslist.size())));
-		if (eventslist == null)
+		returnmap.put(KEY_NUMEVENTS, (defevents == null ? "null" : Integer.toString(defevents.size())));
+		if (defevents == null)
 			returnmap.put(KEY_EVENTSDATA, "null");
 		else 
+		if (defevents.isEmpty())
+			returnmap.put(KEY_EVENTSDATA, "empty");
+		else {
+			JSONArray eventslist = new JSONArray();
+			DEFEvent thisevent = null;
+			Iterator<DEFEvent> ssit = defevents.iterator();
+			while (ssit.hasNext()) {
+				thisevent = ssit.next();
+				eventslist.add(thisevent.getJSON());
+			}
+			
 			returnmap.put(KEY_EVENTSDATA, eventslist);
+		}
 
 		String returnstring = "no results";
 		try {
@@ -128,7 +132,7 @@ public class RestApi_Events
 			Utils.logString(myClassname + ".getEventsDataForId()", returnstring, 0);
 		}
 		
-		Utils.logExit (myClassname + ".getEventsDataOfTypeForId()");
+		Utils.logExit (myClassname + ".getEventsDataForId()");
 		
 		return returnstring;
   }
